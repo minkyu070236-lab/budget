@@ -1,0 +1,653 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<title>미어캣 가계부</title>
+<meta name="theme-color" content="#F3F2F7">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="미어캣 가계부">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>
+  @font-face{
+    font-family:'TadakTadak';
+    src:url('TDTDTadakTadak/TTF/1.0.0/TDTDTadakTadak.ttf') format('truetype');
+    font-weight:normal;font-style:normal;font-display:swap;
+  }
+  :root{
+    --brand:#5B43E8;
+    --brand-d:#4a35c9;
+    --brand-soft:#F0EDFD;
+    --paper:#F3F2F7;
+    --surface:#FFFFFF;
+    --ink:#2A2540;
+    --muted:#9C98AD;
+    --rule:#EFEEF4;
+    --income:#1F9D6B;
+    --expense:#E0594B;
+    --shadow:0 1px 2px rgba(40,30,90,.04), 0 10px 28px rgba(40,30,90,.07);
+    --r:18px;
+    font-family:'TadakTadak','Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);}
+  body{
+    max-width:520px;margin:0 auto;min-height:100vh;
+    padding-bottom:calc(150px + env(safe-area-inset-bottom));
+    -webkit-font-smoothing:antialiased;
+  }
+  .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input{font-family:inherit;}
+  :focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+
+  main{display:block;}
+
+  /* ---- purple header ---- */
+  .phdr{
+    background:var(--brand);color:#fff;
+    padding:calc(16px + env(safe-area-inset-top)) 22px 46px;
+  }
+  .pnav{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:18px;}
+  .pnav button{width:34px;height:34px;border-radius:50%;font-size:19px;color:#fff;opacity:.85;display:grid;place-items:center;}
+  .pnav button:active{background:rgba(255,255,255,.16);}
+  .pnav .mlabel{font-size:16px;font-weight:700;min-width:90px;text-align:center;}
+  .plabel{font-size:13px;color:#cdc4f7;font-weight:600;}
+  .pbal{font-size:34px;font-weight:800;letter-spacing:-.02em;margin-top:5px;line-height:1.1;}
+  .psplit{display:flex;gap:10px;margin-top:18px;}
+  .psplit>div{flex:1;background:rgba(255,255,255,.14);border-radius:14px;padding:11px 14px;}
+  .psplit .k{font-size:11px;color:#d6cffb;font-weight:600;}
+  .psplit .v{font-size:15px;font-weight:800;color:#fff;margin-top:3px;}
+
+  .phdr-sm{padding-bottom:42px;}
+  .ptitle{font-size:22px;font-weight:800;}
+  .psub{font-size:13px;color:#cdc4f7;font-weight:600;margin-top:5px;}
+
+  /* ---- white sheet pulled up ---- */
+  .sheet-body{
+    background:var(--surface);border-radius:22px 22px 0 0;
+    margin-top:-26px;position:relative;z-index:2;
+    padding:18px 16px 24px;min-height:340px;
+  }
+
+  /* ---- category breakdown ---- */
+  .breakdown{background:var(--paper);border-radius:14px;padding:15px 16px;margin-bottom:18px;}
+  .breakdown h3{margin:0 0 12px;font-size:12px;color:var(--muted);font-weight:700;display:flex;justify-content:space-between;}
+  .breakdown h3 .num{color:var(--ink);}
+  .catrow{margin-bottom:11px;}.catrow:last-child{margin-bottom:0;}
+  .catrow .top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px;font-weight:600;}
+  .catrow .pct{color:var(--muted);font-size:11px;margin-left:6px;}
+  .catrow .amt{font-weight:800;}
+  .bar{height:6px;background:#e6e4ef;border-radius:99px;overflow:hidden;}
+  .bar>span{display:block;height:100%;background:var(--brand);border-radius:99px;}
+
+  /* ---- transaction list ---- */
+  .dlabel{display:flex;justify-content:space-between;align-items:baseline;padding:14px 6px 8px;}
+  .dlabel:first-child{padding-top:2px;}
+  .dlabel .d{font-size:13px;font-weight:800;}
+  .dlabel .wk{color:var(--muted);font-weight:600;font-size:12px;margin-left:5px;}
+  .dlabel .ds{font-size:12px;color:var(--muted);font-weight:700;}
+  .row{display:flex;align-items:center;gap:12px;padding:11px 8px;width:100%;text-align:left;border-radius:12px;}
+  .row:active{background:#faf9fd;}
+  .ico{width:38px;height:38px;border-radius:12px;background:var(--brand-soft);display:grid;place-items:center;font-size:17px;flex-shrink:0;line-height:1;}
+  .row .m{flex:1;min-width:0;}
+  .row .mt{font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row .ms{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:1px;}
+  .row .a{font-size:15px;font-weight:800;white-space:nowrap;}
+  .a.inc{color:var(--income);} .a.exp{color:var(--ink);}
+
+  .empty{text-align:center;color:var(--muted);padding:48px 30px;font-size:14px;line-height:1.7;}
+  .empty .big{font-size:30px;margin-bottom:10px;color:var(--brand);}
+
+  /* ---- recurring ---- */
+  .reclist{display:flex;flex-direction:column;gap:10px;}
+  .rec{background:var(--paper);border-radius:14px;padding:14px 15px;display:flex;align-items:center;gap:13px;width:100%;text-align:left;}
+  .rec:active{background:#ecebf3;}
+  .rec.off{opacity:.5;}
+  .rec .recday{width:44px;height:44px;border-radius:12px;background:var(--brand-soft);display:grid;place-items:center;flex-shrink:0;}
+  .rec .recday b{font-size:16px;font-weight:800;line-height:1;color:var(--brand-d);}
+  .rec .recday small{font-size:9px;color:var(--brand);font-weight:700;}
+  .rec .mid{flex:1;min-width:0;}
+  .rec .nm{font-size:15px;font-weight:700;}
+  .rec .ca{font-size:12px;color:var(--muted);font-weight:600;margin-top:2px;}
+  .rec .amt{font-weight:800;font-size:15px;}
+  .addrec{margin-top:14px;width:100%;padding:15px;border-radius:14px;border:1.5px dashed #d8d4ec;color:var(--brand);font-weight:700;font-size:15px;background:var(--surface);}
+  .addrec:active{background:var(--brand-soft);}
+  .recnote{text-align:center;font-size:12px;color:var(--muted);margin:16px 6px 0;line-height:1.6;}
+
+  /* ---- calendar ---- */
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .calhead{margin-bottom:6px;}
+  .cwk{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding:4px 0;}
+  .cwk.sun{color:var(--expense);} .cwk.sat{color:#3f6bd6;}
+  .cday{min-height:56px;border-radius:10px;background:var(--paper);padding:5px 3px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;overflow:hidden;}
+  .cday.blank{background:transparent;pointer-events:none;}
+  .cday:active{background:#ecebf3;}
+  .cday .cn{font-size:12px;font-weight:700;color:var(--ink);line-height:1;}
+  .cday.sun .cn{color:var(--expense);} .cday.sat .cn{color:#3f6bd6;}
+  .cday.today .cn{background:var(--brand);color:#fff;border-radius:50%;width:19px;height:19px;display:grid;place-items:center;}
+  .cday.sel{outline:2px solid var(--brand);background:var(--brand-soft);}
+  .cday .cms{display:flex;flex-direction:column;gap:1px;width:100%;}
+  .cm{font-size:9px;font-weight:700;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cm.inc{color:var(--income);} .cm.exp{color:var(--expense);}
+  .caldetail{margin-top:16px;border-top:1px solid var(--rule);padding-top:2px;}
+
+  /* ---- FAB ---- */
+  .fab{
+    position:fixed;left:50%;transform:translateX(-50%);
+    bottom:calc(80px + env(safe-area-inset-bottom));z-index:30;
+    width:58px;height:58px;border-radius:50%;background:var(--brand);color:#fff;
+    font-size:30px;font-weight:300;display:grid;place-items:center;line-height:1;
+    box-shadow:0 8px 22px rgba(91,67,232,.45);
+  }
+  .fab:active{transform:translateX(-50%) scale(.94);}
+
+  /* ---- bottom tabs ---- */
+  .tabs{
+    position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);
+    border-top:1px solid var(--rule);display:flex;
+    padding-bottom:env(safe-area-inset-bottom);max-width:520px;margin:0 auto;
+  }
+  .tabs button{flex:1;padding:11px 0 13px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:11px;font-weight:600;}
+  .tabs button.on{color:var(--brand);}
+  .tabs .ic{font-size:20px;line-height:1;}
+
+  /* ---- sheet (add/edit) ---- */
+  .scrim{position:fixed;inset:0;background:rgba(30,24,60,.4);z-index:40;opacity:0;pointer-events:none;transition:opacity .22s;}
+  .scrim.show{opacity:1;pointer-events:auto;}
+  .sheet{
+    position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);
+    max-width:520px;margin:0 auto;border-radius:22px 22px 0 0;
+    padding:8px 20px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(100%);transition:transform .26s cubic-bezier(.32,.72,0,1);
+    max-height:92vh;overflow-y:auto;
+  }
+  .sheet.show{transform:translateY(0);}
+  .grab{width:38px;height:4px;border-radius:99px;background:var(--rule);margin:8px auto 14px;}
+  .sheet h2{margin:0 0 16px;font-size:18px;font-weight:800;}
+  .seg{display:flex;background:var(--paper);border-radius:12px;padding:4px;margin-bottom:18px;}
+  .seg button{flex:1;padding:10px;border-radius:9px;font-weight:700;font-size:15px;color:var(--muted);}
+  .seg button.on{background:var(--surface);box-shadow:var(--shadow);}
+  .seg button.on.exp{color:var(--expense);} .seg button.on.inc{color:var(--income);}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px;}
+  .amtbox{display:flex;align-items:center;border-bottom:2px solid var(--ink);padding-bottom:6px;}
+  .amtbox span{font-size:26px;font-weight:800;margin-right:6px;color:var(--muted);}
+  .amtbox input{flex:1;border:none;outline:none;font-size:30px;font-weight:800;background:none;color:var(--ink);width:100%;font-variant-numeric:tabular-nums;}
+  .inp{width:100%;border:1.5px solid var(--rule);border-radius:11px;padding:13px 14px;font-size:16px;outline:none;background:var(--surface);color:var(--ink);}
+  .inp:focus{border-color:var(--brand);}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:9px;}
+  .chips button{padding:9px 13px;border-radius:99px;background:var(--paper);font-size:13px;font-weight:600;color:var(--ink);}
+  .chips button.on{background:var(--brand);color:#fff;}
+  .row2{display:flex;gap:12px;}.row2 .field{flex:1;}
+  .toggle{display:flex;align-items:center;justify-content:space-between;padding:13px 2px;}
+  .toggle .sw{width:50px;height:30px;border-radius:99px;background:var(--rule);position:relative;transition:background .2s;}
+  .toggle .sw.on{background:var(--brand);}
+  .toggle .sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .toggle .sw.on::after{left:23px;}
+  .save{width:100%;padding:16px;border-radius:13px;background:var(--brand);color:#fff;font-size:16px;font-weight:800;margin-top:6px;}
+  .save:active{background:var(--brand-d);}
+  .del{width:100%;padding:14px;border-radius:13px;color:var(--expense);font-weight:700;font-size:15px;margin-top:10px;}
+  .del:active{background:#fdeceb;}
+
+  /* ---- app title (same color as page background, black text) ---- */
+  .appbar{
+    position:relative;
+    background:var(--paper);color:#000;
+    display:flex;align-items:center;justify-content:center;gap:9px;
+    font-size:23px;letter-spacing:-.01em;
+    padding:calc(16px + env(safe-area-inset-top)) 16px 12px;
+  }
+  .appbar .logo{width:34px;height:34px;border-radius:9px;object-fit:contain;flex-shrink:0;}
+  .appbar .ttl{font-weight:800;-webkit-text-stroke:.7px #000;}
+  .setbtn{position:absolute;right:14px;bottom:8px;width:34px;height:34px;border-radius:50%;font-size:19px;color:#6b6680;display:grid;place-items:center;}
+  .setbtn:active{background:rgba(0,0,0,.06);}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+
+<header class="appbar"><img class="logo" src="meerkat.png" alt="미어캣" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'🦦',style:'font-size:28px;line-height:1'}))"><span class="ttl">미어캣 가계부</span><button class="setbtn" id="setBtn" aria-label="설정·백업">⚙</button></header>
+
+<main id="view"></main>
+
+<button class="fab" id="fab" aria-label="기록 추가">+</button>
+
+<nav class="tabs">
+  <button id="tabLedger" class="on"><span class="ic">🧾</span>내역</button>
+  <button id="tabCal"><span class="ic">📅</span>달력</button>
+  <button id="tabRec"><span class="ic">🔁</span>고정비</button>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"></div>
+
+<script>
+/* =================== verified core logic =================== */
+function pad2(n){return String(n).padStart(2,'0');}
+function daysInMonth(y,m){return new Date(y,m,0).getDate();}
+function clampDay(d,y,m){return Math.min(d,daysInMonth(y,m));}
+function dateFor(mk,day){const[y,m]=mk.split('-').map(Number);return `${mk}-${pad2(clampDay(day,y,m))}`;}
+function monthKeyOf(ds){return ds.slice(0,7);}
+function makeId(p){return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function applyRecurring(state,mk,idGen=makeId){
+  const applied={...(state.appliedRecurring||{})};
+  const list=new Set(applied[mk]||[]);
+  const add=[];
+  for(const r of state.recurrings||[]){
+    if(!r.active)continue;
+    if(r.startMonth&&mk<r.startMonth)continue;
+    if(list.has(r.id))continue;
+    add.push({id:idGen('t'),type:r.type,amount:r.amount,category:r.category,memo:r.name,date:dateFor(mk,r.day),recurringId:r.id});
+    list.add(r.id);
+  }
+  applied[mk]=Array.from(list);
+  return {...state,transactions:[...(state.transactions||[]),...add],appliedRecurring:applied};
+}
+function summarize(txs,mk){
+  let income=0,expense=0;const byCategory={};
+  for(const t of txs){
+    if(monthKeyOf(t.date)!==mk)continue;
+    if(t.type==='income')income+=t.amount;else expense+=t.amount;
+    const c=byCategory[t.category]=byCategory[t.category]||{expense:0,income:0};
+    c[t.type]+=t.amount;
+  }
+  return {income,expense,balance:income-expense,byCategory};
+}
+function txForMonth(txs,mk){
+  return txs.filter(t=>monthKeyOf(t.date)===mk).sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(a.id<b.id?1:-1));
+}
+
+/* =================== storage adapter =================== */
+const Store=(()=>{
+  const KEY='jangbu-data-v1';
+  const hasWin=typeof window!=='undefined'&&window.storage&&typeof window.storage.get==='function';
+  let mem=null,ls=null;
+  if(!hasWin){try{const t='__t';localStorage.setItem(t,'1');localStorage.removeItem(t);ls=localStorage;}catch(e){ls=null;}}
+  return {
+    async load(){
+      if(hasWin){try{const r=await window.storage.get(KEY,false);return r&&r.value?JSON.parse(r.value):null;}catch(e){return null;}}
+      if(ls){try{const v=ls.getItem(KEY);return v?JSON.parse(v):null;}catch(e){return null;}}
+      return mem;
+    },
+    async save(data){
+      const s=JSON.stringify(data);
+      if(hasWin){try{await window.storage.set(KEY,s,false);}catch(e){}return;}
+      if(ls){try{ls.setItem(KEY,s);}catch(e){}return;}
+      mem=data;
+    }
+  };
+})();
+
+/* =================== config =================== */
+const CATS={
+  expense:['식비','카페/간식','교통','생활용품','주거/공과금','통신','의료/건강','문화/여가','쇼핑','경조사','교육','기타'],
+  income:['급여','사업수입','용돈','이자/배당','환급','기타']
+};
+const CATICON={'식비':'🍚','카페/간식':'☕','교통':'🚌','생활용품':'🧴','주거/공과금':'🏠','통신':'📱','의료/건강':'🏥','문화/여가':'🎬','쇼핑':'🛍️','경조사':'🎁','교육':'📚','기타':'📌','급여':'💼','사업수입':'🏢','용돈':'💵','이자/배당':'📈','환급':'↩️'};
+function catIcon(c){return CATICON[c]||(c?c.slice(0,1):'·');}
+const WK=['일','월','화','수','목','금','토'];
+
+/* =================== state =================== */
+let state={transactions:[],recurrings:[],appliedRecurring:{}};
+const today=new Date();
+const curMK=`${today.getFullYear()}-${pad2(today.getMonth()+1)}`;
+let viewMK=curMK;
+let tab='ledger';
+let calSel=null;
+
+function won(n){return '₩'+Math.round(n).toLocaleString('ko-KR');}
+function shortWon(n){n=Math.round(n);if(n>=10000){const v=n/10000;return (v>=10?Math.round(v):Math.round(v*10)/10).toString().replace(/\.0$/,'')+'만';}return n.toLocaleString('ko-KR');}
+function mkParts(mk){const[y,m]=mk.split('-').map(Number);return{y,m};}
+function shiftMonth(mk,d){let{y,m}=mkParts(mk);m+=d;while(m<1){m+=12;y--;}while(m>12){m-=12;y++;}return `${y}-${pad2(m)}`;}
+async function persist(){await Store.save(state);}
+
+function ensureRecurring(){
+  if(viewMK>curMK)return false;
+  const before=state.transactions.length;
+  const next=applyRecurring(state,viewMK);
+  if(next.transactions.length!==before||JSON.stringify(next.appliedRecurring)!==JSON.stringify(state.appliedRecurring)){
+    state=next;return true;
+  }
+  return false;
+}
+
+/* =================== render =================== */
+const $=s=>document.querySelector(s);
+const elView=$('#view');
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function render(){
+  if(tab==='ledger'){if(ensureRecurring())await persist();renderLedger();}
+  else if(tab==='calendar'){if(ensureRecurring())await persist();renderCalendar();}
+  else renderRecurring();
+  $('#tabLedger').classList.toggle('on',tab==='ledger');
+  $('#tabCal').classList.toggle('on',tab==='calendar');
+  $('#tabRec').classList.toggle('on',tab==='recurring');
+}
+
+function renderLedger(){
+  const s=summarize(state.transactions,viewMK);
+  const txs=txForMonth(state.transactions,viewMK);
+  const{y,m}=mkParts(viewMK);
+  let html='';
+
+  html+=`<div class="phdr">
+    <div class="pnav">
+      <button id="prevM" aria-label="이전 달">‹</button>
+      <div class="mlabel num">${y}. ${m}</div>
+      <button id="nextM" aria-label="다음 달">›</button>
+    </div>
+    <div class="plabel">${m}월 남은 금액</div>
+    <div class="pbal num">${s.balance<0?'−':''}${won(Math.abs(s.balance))}</div>
+    <div class="psplit">
+      <div><div class="k">수입</div><div class="v num">+${won(s.income)}</div></div>
+      <div><div class="k">지출</div><div class="v num">−${won(s.expense)}</div></div>
+    </div>
+  </div>`;
+
+  html+=`<div class="sheet-body">`;
+
+  const cats=Object.entries(s.byCategory).filter(([,v])=>v.expense>0).sort((a,b)=>b[1].expense-a[1].expense).slice(0,5);
+  if(cats.length){
+    html+=`<div class="breakdown"><h3><span>카테고리별 지출</span><span class="num">${won(s.expense)}</span></h3>`;
+    for(const[name,v]of cats){
+      const pct=s.expense?Math.round(v.expense/s.expense*100):0;
+      html+=`<div class="catrow"><div class="top"><span>${esc(name)}<span class="pct num">${pct}%</span></span><span class="amt num">${won(v.expense)}</span></div><div class="bar"><span style="width:${pct}%"></span></div></div>`;
+    }
+    html+=`</div>`;
+  }
+
+  if(!txs.length){
+    html+=`<div class="empty"><div class="big">▤</div>이번 달 기록이 아직 없어요.<br>아래 <b>+</b> 버튼으로 첫 기록을 남겨보세요.</div>`;
+  }else{
+    let curDay='';
+    for(const t of txs){
+      if(t.date!==curDay){
+        curDay=t.date;
+        const dt=new Date(t.date+'T00:00:00');
+        const dsum=txs.filter(x=>x.date===t.date).reduce((a,x)=>a+(x.type==='income'?x.amount:-x.amount),0);
+        html+=`<div class="dlabel"><div><span class="d num">${m}월 ${dt.getDate()}일</span><span class="wk">${WK[dt.getDay()]}</span></div><div class="ds num">${dsum>=0?'+':'−'}${won(Math.abs(dsum))}</div></div>`;
+      }
+      const inc=t.type==='income';
+      html+=`<button class="row" data-tx="${t.id}">
+        <span class="ico">${esc(catIcon(t.category))}</span>
+        <span class="m"><span class="mt">${esc(t.memo||t.category)}</span><span class="ms">${esc(t.category)}${t.recurringId?' · 고정':''}</span></span>
+        <span class="a num ${inc?'inc':'exp'}">${inc?'+':'−'}${won(t.amount)}</span>
+      </button>`;
+    }
+  }
+  html+=`</div>`;
+  elView.innerHTML=html;
+
+  $('#prevM').onclick=async()=>{viewMK=shiftMonth(viewMK,-1);await render();};
+  $('#nextM').onclick=async()=>{viewMK=shiftMonth(viewMK,1);await render();};
+  elView.querySelectorAll('[data-tx]').forEach(b=>b.onclick=()=>openTxSheet(b.dataset.tx));
+}
+
+function renderCalendar(){
+  const{y,m}=mkParts(viewMK);
+  const s=summarize(state.transactions,viewMK);
+  const txs=txForMonth(state.transactions,viewMK);
+  const byDate={};
+  for(const t of txs){(byDate[t.date]=byDate[t.date]||{income:0,expense:0})[t.type]+=t.amount;}
+  if(!calSel||monthKeyOf(calSel)!==viewMK){
+    calSel=(viewMK===curMK)?`${curMK}-${pad2(today.getDate())}`:null;
+  }
+  const todayStr=`${curMK}-${pad2(today.getDate())}`;
+
+  let html=`<div class="phdr phdr-sm">
+    <div class="pnav">
+      <button id="prevM" aria-label="이전 달">‹</button>
+      <div class="mlabel num">${y}. ${m}</div>
+      <button id="nextM" aria-label="다음 달">›</button>
+    </div>
+    <div class="psplit">
+      <div><div class="k">수입</div><div class="v num">+${won(s.income)}</div></div>
+      <div><div class="k">지출</div><div class="v num">−${won(s.expense)}</div></div>
+    </div>
+  </div>`;
+
+  html+=`<div class="sheet-body">`;
+  html+=`<div class="calgrid calhead">`+WK.map((w,i)=>`<div class="cwk ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('')+`</div>`;
+
+  const first=new Date(y,m-1,1).getDay();
+  const dim=daysInMonth(y,m);
+  html+=`<div class="calgrid">`;
+  for(let i=0;i<first;i++)html+=`<div class="cday blank"></div>`;
+  for(let d=1;d<=dim;d++){
+    const ds=`${viewMK}-${pad2(d)}`;
+    const info=byDate[ds];
+    const dow=(first+d-1)%7;
+    let cls='cday';
+    if(ds===calSel)cls+=' sel';
+    if(ds===todayStr)cls+=' today';
+    if(dow===0)cls+=' sun';if(dow===6)cls+=' sat';
+    let marks='';
+    if(info){
+      if(info.income)marks+=`<span class="cm inc">+${shortWon(info.income)}</span>`;
+      if(info.expense)marks+=`<span class="cm exp">−${shortWon(info.expense)}</span>`;
+    }
+    html+=`<button class="${cls}" data-day="${ds}"><span class="cn num">${d}</span><span class="cms">${marks}</span></button>`;
+  }
+  html+=`</div>`;
+
+  html+=`<div class="caldetail">`;
+  if(calSel){
+    const dtx=txs.filter(t=>t.date===calSel).sort((a,b)=>a.id<b.id?1:-1);
+    const dt=new Date(calSel+'T00:00:00');
+    html+=`<div class="dlabel"><div><span class="d num">${m}월 ${dt.getDate()}일</span><span class="wk">${WK[dt.getDay()]}</span></div>`;
+    if(dtx.length){const dsum=dtx.reduce((a,x)=>a+(x.type==='income'?x.amount:-x.amount),0);html+=`<div class="ds num">${dsum>=0?'+':'−'}${won(Math.abs(dsum))}</div>`;}
+    html+=`</div>`;
+    if(!dtx.length){html+=`<div class="empty" style="padding:28px 20px">이 날의 기록이 없어요.</div>`;}
+    else for(const t of dtx){
+      const inc=t.type==='income';
+      html+=`<button class="row" data-tx="${t.id}">
+        <span class="ico">${esc(catIcon(t.category))}</span>
+        <span class="m"><span class="mt">${esc(t.memo||t.category)}</span><span class="ms">${esc(t.category)}${t.recurringId?' · 고정':''}</span></span>
+        <span class="a num ${inc?'inc':'exp'}">${inc?'+':'−'}${won(t.amount)}</span>
+      </button>`;
+    }
+  }else{
+    html+=`<div class="empty" style="padding:28px 20px">날짜를 누르면<br>그 날의 내역을 볼 수 있어요.</div>`;
+  }
+  html+=`</div></div>`;
+  elView.innerHTML=html;
+
+  $('#prevM').onclick=async()=>{viewMK=shiftMonth(viewMK,-1);calSel=null;await render();};
+  $('#nextM').onclick=async()=>{viewMK=shiftMonth(viewMK,1);calSel=null;await render();};
+  elView.querySelectorAll('[data-day]').forEach(b=>b.onclick=async()=>{calSel=b.dataset.day;await render();});
+  elView.querySelectorAll('[data-tx]').forEach(b=>b.onclick=()=>openTxSheet(b.dataset.tx));
+}
+
+function renderRecurring(){
+  const recs=[...state.recurrings].sort((a,b)=>a.day-b.day);
+  let html=`<div class="phdr phdr-sm"><div class="ptitle">고정비</div><div class="psub">매달 반복되는 수입·지출</div></div>`;
+  html+=`<div class="sheet-body">`;
+  if(!recs.length){
+    html+=`<div class="empty"><div class="big">🔁</div>매달 반복되는 고정비를 등록해두면<br>해당 월에 자동으로 기록돼요.</div>`;
+  }else{
+    html+=`<div class="reclist">`;
+    for(const r of recs){
+      html+=`<button class="rec ${r.active?'':'off'}" data-rec="${r.id}">
+        <div class="recday"><b class="num">${r.day}</b><small>일</small></div>
+        <div class="mid"><div class="nm">${esc(r.name)}</div><div class="ca">${esc(r.category)} · ${r.type==='income'?'수입':'지출'}${r.active?'':' · 꺼짐'}</div></div>
+        <div class="amt num" style="color:${r.type==='income'?'var(--income)':'var(--ink)'}">${r.type==='income'?'+':'−'}${won(r.amount)}</div>
+      </button>`;
+    }
+    html+=`</div>`;
+  }
+  html+=`<button class="addrec" id="addRec">+ 고정비 추가</button>`;
+  html+=`<p class="recnote">고정비는 해당 월을 열어볼 때 자동으로 내역에 추가됩니다.<br>이미 추가된 항목을 지워도 그 달엔 다시 생기지 않아요.</p>`;
+  html+=`</div>`;
+  elView.innerHTML=html;
+  $('#addRec').onclick=()=>openRecSheet(null);
+  elView.querySelectorAll('[data-rec]').forEach(b=>b.onclick=()=>openRecSheet(b.dataset.rec));
+}
+
+/* =================== sheets =================== */
+const scrim=$('#scrim'),sheet=$('#sheet');
+function openSheet(){scrim.classList.add('show');sheet.classList.add('show');}
+function closeSheet(){scrim.classList.remove('show');sheet.classList.remove('show');}
+scrim.onclick=closeSheet;
+function fmtAmtInput(v){const d=String(v).replace(/[^\d]/g,'');return d?parseInt(d,10).toLocaleString('ko-KR'):'';}
+function parseAmt(v){return parseInt(String(v).replace(/[^\d]/g,'')||'0',10);}
+
+function openTxSheet(txId){
+  const editing=txId?state.transactions.find(t=>t.id===txId):null;
+  let type=editing?editing.type:'expense';
+  let cat=editing?editing.category:'';
+  const defDate=editing?editing.date:((tab==='calendar'&&calSel)?calSel:(viewMK===curMK?`${curMK}-${pad2(today.getDate())}`:`${viewMK}-01`));
+  function draw(){
+    sheet.innerHTML=`<div class="grab"></div>
+      <h2>${editing?'기록 수정':'기록 추가'}</h2>
+      <div class="seg"><button data-t="expense" class="${type==='expense'?'on exp':''}">지출</button><button data-t="income" class="${type==='income'?'on inc':''}">수입</button></div>
+      <div class="field"><label>금액</label><div class="amtbox"><span>₩</span><input id="amt" inputmode="numeric" placeholder="0" value="${editing?editing.amount.toLocaleString('ko-KR'):''}"></div></div>
+      <div class="field"><label>분류</label>
+        <div class="chips" id="chips">${CATS[type].map(c=>`<button data-c="${esc(c)}" class="${c===cat?'on':''}">${esc(c)}</button>`).join('')}</div>
+        <input class="inp" id="catInput" placeholder="직접 입력" value="${esc(CATS[type].includes(cat)?'':cat)}"></div>
+      <div class="row2"><div class="field"><label>날짜</label><input class="inp" id="date" type="date" value="${defDate}"></div></div>
+      <div class="field"><label>메모 (선택)</label><input class="inp" id="memo" placeholder="예: 점심, 마트 장보기" value="${editing?esc(editing.memo||''):''}"></div>
+      <button class="save" id="saveTx">${editing?'수정 완료':'저장'}</button>
+      ${editing?'<button class="del" id="delTx">삭제</button>':''}`;
+    sheet.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{if(b.dataset.t!==type){type=b.dataset.t;cat='';draw();}});
+    sheet.querySelectorAll('#chips button').forEach(b=>b.onclick=()=>{cat=b.dataset.c;$('#catInput').value='';sheet.querySelectorAll('#chips button').forEach(x=>x.classList.toggle('on',x===b));});
+    const amt=$('#amt');amt.oninput=()=>{amt.value=fmtAmtInput(amt.value);};
+    $('#catInput').oninput=e=>{if(e.target.value)sheet.querySelectorAll('#chips button').forEach(x=>x.classList.remove('on'));};
+    $('#saveTx').onclick=()=>saveTx(editing);
+    if(editing)$('#delTx').onclick=()=>delTx(editing.id);
+  }
+  draw();openSheet();setTimeout(()=>$('#amt').focus(),300);
+}
+async function saveTx(editing){
+  const amount=parseAmt($('#amt').value);
+  const typedCat=$('#catInput').value.trim();
+  const chosen=sheet.querySelector('#chips button.on');
+  const category=typedCat||(chosen?chosen.dataset.c:'')||'기타';
+  const date=$('#date').value;const memo=$('#memo').value.trim();
+  const type=sheet.querySelector('.seg button.on').dataset.t;
+  if(amount<=0){$('#amt').focus();return;}
+  if(editing)Object.assign(editing,{type,amount,category,memo,date});
+  else state.transactions.push({id:makeId('t'),type,amount,category,memo,date});
+  viewMK=monthKeyOf(date);
+  await persist();closeSheet();await render();
+}
+async function delTx(id){state.transactions=state.transactions.filter(t=>t.id!==id);await persist();closeSheet();await render();}
+
+function openRecSheet(recId){
+  const editing=recId?state.recurrings.find(r=>r.id===recId):null;
+  let type=editing?editing.type:'expense';
+  let cat=editing?editing.category:'';
+  let active=editing?editing.active:true;
+  function draw(){
+    sheet.innerHTML=`<div class="grab"></div>
+      <h2>${editing?'고정비 수정':'고정비 추가'}</h2>
+      <div class="seg"><button data-t="expense" class="${type==='expense'?'on exp':''}">지출</button><button data-t="income" class="${type==='income'?'on inc':''}">수입</button></div>
+      <div class="field"><label>이름</label><input class="inp" id="rnm" placeholder="예: 월세, 통신비, 급여" value="${editing?esc(editing.name):''}"></div>
+      <div class="field"><label>금액</label><div class="amtbox"><span>₩</span><input id="amt" inputmode="numeric" placeholder="0" value="${editing?editing.amount.toLocaleString('ko-KR'):''}"></div></div>
+      <div class="row2"><div class="field"><label>매달 며칠</label><input class="inp num" id="rday" inputmode="numeric" placeholder="1~31" value="${editing?editing.day:''}"></div></div>
+      <div class="field"><label>분류</label>
+        <div class="chips" id="chips">${CATS[type].map(c=>`<button data-c="${esc(c)}" class="${c===cat?'on':''}">${esc(c)}</button>`).join('')}</div>
+        <input class="inp" id="catInput" placeholder="직접 입력" value="${esc(CATS[type].includes(cat)?'':cat)}"></div>
+      <div class="toggle"><label style="margin:0;font-size:15px;color:var(--ink);font-weight:600">자동 반영 켜기</label><div class="sw ${active?'on':''}" id="sw"></div></div>
+      <button class="save" id="saveRec">${editing?'수정 완료':'저장'}</button>
+      ${editing?'<button class="del" id="delRec">삭제</button>':''}`;
+    sheet.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{if(b.dataset.t!==type){type=b.dataset.t;cat='';draw();}});
+    sheet.querySelectorAll('#chips button').forEach(b=>b.onclick=()=>{cat=b.dataset.c;$('#catInput').value='';sheet.querySelectorAll('#chips button').forEach(x=>x.classList.toggle('on',x===b));});
+    const amt=$('#amt');amt.oninput=()=>{amt.value=fmtAmtInput(amt.value);};
+    $('#catInput').oninput=e=>{if(e.target.value)sheet.querySelectorAll('#chips button').forEach(x=>x.classList.remove('on'));};
+    $('#sw').onclick=()=>{active=!active;$('#sw').classList.toggle('on',active);};
+    $('#saveRec').onclick=()=>saveRec(editing);
+    if(editing)$('#delRec').onclick=()=>delRec(editing.id);
+  }
+  draw();openSheet();
+}
+async function saveRec(editing){
+  const name=$('#rnm').value.trim();
+  const amount=parseAmt($('#amt').value);
+  const day=parseInt($('#rday').value,10);
+  const typedCat=$('#catInput').value.trim();
+  const chosen=sheet.querySelector('#chips button.on');
+  const category=typedCat||(chosen?chosen.dataset.c:'')||'기타';
+  const type=sheet.querySelector('.seg button.on').dataset.t;
+  const active=$('#sw').classList.contains('on');
+  if(!name){$('#rnm').focus();return;}
+  if(amount<=0){$('#amt').focus();return;}
+  if(!(day>=1&&day<=31)){$('#rday').focus();return;}
+  if(editing){
+    Object.assign(editing,{type,amount,category,name,day,active});
+    const t=state.transactions.find(x=>x.recurringId===editing.id&&monthKeyOf(x.date)===viewMK);
+    if(t)Object.assign(t,{type,amount,category,memo:name,date:dateFor(viewMK,day)});
+  }else{
+    state.recurrings.push({id:makeId('r'),type,amount,category,name,day,active,startMonth:curMK});
+  }
+  ensureRecurring();
+  await persist();closeSheet();await render();
+}
+async function delRec(id){state.recurrings=state.recurrings.filter(r=>r.id!==id);await persist();closeSheet();await render();}
+
+/* =================== settings / backup =================== */
+function openSettingsSheet(){
+  const n=state.transactions.length,r=state.recurrings.length;
+  sheet.innerHTML=`<div class="grab"></div>
+    <h2>설정 · 백업</h2>
+    <p class="recnote" style="text-align:left;margin:0 0 16px;line-height:1.7">기록은 이 기기(브라우저)에 자동으로 저장돼요.<br>기기를 바꾸거나 만약을 대비해, 가끔 <b>백업 파일로 내보내</b> 두면 안전해요.</p>
+    <button class="save" id="expBtn">💾 백업 파일 내보내기</button>
+    <button class="addrec" id="impBtn" style="margin-top:12px">📂 백업 파일 불러오기</button>
+    <input type="file" id="impFile" accept="application/json,.json" style="display:none">
+    <p class="recnote" style="margin-top:16px">현재 저장된 기록 ${n}건 · 고정비 ${r}건</p>`;
+  $('#expBtn').onclick=exportBackup;
+  $('#impBtn').onclick=()=>$('#impFile').click();
+  $('#impFile').onchange=importBackup;
+  openSheet();
+}
+function exportBackup(){
+  const payload={app:'mearcat-jangbu',version:1,exportedAt:new Date().toISOString(),state};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const d=new Date();const ymd=`${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}`;
+  const a=document.createElement('a');
+  a.href=url;a.download=`미어캣가계부-백업-${ymd}.json`;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+async function importBackup(e){
+  const file=e.target.files&&e.target.files[0];
+  e.target.value='';
+  if(!file)return;
+  try{
+    const obj=JSON.parse(await file.text());
+    const st=(obj&&obj.state)?obj.state:obj;
+    if(!st||!Array.isArray(st.transactions))throw new Error('형식 오류');
+    if(!confirm('현재 기기의 데이터를 백업 파일 내용으로 덮어쓸까요?\n(지금 데이터가 사라질 수 있어요)'))return;
+    state={transactions:st.transactions||[],recurrings:st.recurrings||[],appliedRecurring:st.appliedRecurring||{}};
+    await persist();closeSheet();await render();
+    alert('백업을 불러왔어요. ✅');
+  }catch(err){
+    alert('백업 파일을 읽지 못했어요.\n올바른 미어캣 가계부 백업 파일인지 확인해 주세요.');
+  }
+}
+
+/* =================== events / boot =================== */
+$('#fab').onclick=()=>openTxSheet(null);
+$('#setBtn').onclick=openSettingsSheet;
+$('#tabLedger').onclick=async()=>{tab='ledger';await render();};
+$('#tabCal').onclick=async()=>{tab='calendar';await render();};
+$('#tabRec').onclick=async()=>{tab='recurring';await render();};
+(async()=>{
+  const saved=await Store.load();
+  if(saved&&typeof saved==='object'){
+    state={transactions:saved.transactions||[],recurrings:saved.recurrings||[],appliedRecurring:saved.appliedRecurring||{}};
+  }
+  await render();
+})();
+
+/* ---- PWA: offline cache + durable storage so data isn't evicted ---- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+if(navigator.storage&&navigator.storage.persist){
+  navigator.storage.persisted().then(p=>{if(!p)navigator.storage.persist();}).catch(()=>{});
+}
+</script>
