@@ -1,5 +1,5 @@
 /* 미어캣 가계부 service worker — offline app shell cache */
-const CACHE = 'mearcat-jangbu-v3';
+const CACHE = 'mearcat-jangbu-v4';
 const ASSETS = [
   './',
   './index.html',
